@@ -1,10 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const RandomNumberGame = () => {
   const [companyName, setCompanyName] = useState('');
-  const [participants, setParticipants] = useState([]);
-  const [availableNumbers, setAvailableNumbers] = useState([...Array(15)].map((_, i) => i + 1));
+  const [participants, setParticipants] = useState(() => {
+    const savedParticipants = localStorage.getItem('participants');
+    return savedParticipants ? JSON.parse(savedParticipants) : [];
+  });
+  const [availableNumbers, setAvailableNumbers] = useState(() => {
+    const savedNumbers = localStorage.getItem('availableNumbers');
+    return savedNumbers ? JSON.parse(savedNumbers) : [...Array(15)].map((_, i) => i + 1);
+  });
   const [isSorted, setIsSorted] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('participants', JSON.stringify(participants));
+    localStorage.setItem('availableNumbers', JSON.stringify(availableNumbers));
+  }, [participants, availableNumbers]);
 
   const drawNumber = () => {
     if (companyName.trim() === '') {
@@ -32,15 +43,19 @@ const RandomNumberGame = () => {
     setIsSorted(true);
   };
 
+  const resetGame = () => {
+    if (window.confirm('정말로 게임을 리셋하시겠습니까? 모든 데이터가 삭제됩니다.')) {
+      setParticipants([]);
+      setAvailableNumbers([...Array(15)].map((_, i) => i + 1));
+      setIsSorted(false);
+      localStorage.removeItem('participants');
+      localStorage.removeItem('availableNumbers');
+    }
+  };
+
   return (
     <div style={{ padding: '1rem', width: '100%' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>사다리타기 자리 정하기</h1>
-      <p style={{ fontSize: '1.0rem', fontWeight: 'bold', marginBottom: '1rem' }}>부스자리선정 안내<br/>
-        1. 업체명을 입력하시고 번호뽑기 버튼을 누르시면 무작위로 번호가 생성됩니다.<br/>
-        2. 좌측의 레이아웃의 번호를 확인하셔서 부스 위치를 확인합니다.<br/>
-
-        </p>
-      
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>무작위 번호 뽑기 게임</h1>
       <div style={{ display: 'flex', marginBottom: '1rem' }}>
         <input
           type="text"
@@ -54,10 +69,16 @@ const RandomNumberGame = () => {
       <div style={{ marginBottom: '1rem' }}>
         <button 
           onClick={sortParticipants} 
-          style={{ padding: '0.5rem 1rem', backgroundColor: '#008CBA', color: 'white', border: 'none', cursor: 'pointer', width: '100%' }}
+          style={{ padding: '0.5rem 1rem', backgroundColor: '#008CBA', color: 'white', border: 'none', cursor: 'pointer', width: '100%', marginBottom: '0.5rem' }}
           disabled={isSorted}
         >
           {isSorted ? '정렬됨' : '번호순 정렬'}
+        </button>
+        <button 
+          onClick={resetGame} 
+          style={{ padding: '0.5rem 1rem', backgroundColor: '#f44336', color: 'white', border: 'none', cursor: 'pointer', width: '100%' }}
+        >
+          게임 리셋
         </button>
       </div>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
